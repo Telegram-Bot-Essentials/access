@@ -1,0 +1,9 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    uses: Telegram-Bot-Essentials/.github/.github/workflows/release.yml@main

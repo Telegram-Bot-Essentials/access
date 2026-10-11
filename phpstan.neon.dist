@@ -1,0 +1,21 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - src
+        - database
+
+    level: max
+
+    tmpDir: build/phpstan
+
+    # wHook()->user()->telegramUser->peer_id is used ecosystem-wide (see
+    # essence's own handlers): telegramUser is a belongsTo, which Larastan
+    # types as nullable, but it's backed by a NOT NULL foreign key and is
+    # always populated by the time a handler runs. essence itself baselines
+    # the same pattern rather than littering null-checks around a value
+    # that's never actually null. Delete this along with ExampleKey.php -
+    # it's the only thing that trips it.
+    ignoreErrors:
+        - '#^Cannot access property \$peer_id on Illuminate\\Database\\Eloquent\\Model\|null\.$#'

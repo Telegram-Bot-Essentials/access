@@ -1,0 +1,16 @@
+*.log
+/vendor
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.env.testing
+
+# A library pins nothing: the consuming app's composer.lock resolves it.
+/composer.lock
+
+# Test and analysis artefacts.
+/.phpunit.cache
+/.phpunit.result.cache
+/build

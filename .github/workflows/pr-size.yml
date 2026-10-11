@@ -1,0 +1,9 @@
+name: pr-size
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  size:
+    uses: Telegram-Bot-Essentials/.github/.github/workflows/pr-size.yml@main
