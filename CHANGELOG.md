@@ -7,6 +7,8 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-10-12
+
 ### Added
 
 - Flat, owner-managed roles per bot (`access_roles`, `access_role_user`).
