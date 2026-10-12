@@ -199,7 +199,7 @@ class RolesQuery extends CallbackQuery
     {
         $messageMeta = MessageMeta::makeWithCurrentMessage();
         $messageMeta->lockAction($lock);
-        wHook()->user()->changeState(encodeAnswerState($this->type, $method, ['message_meta_id' => $messageMeta->id, ...$params]));
+        wHook()->conversation()->changeState(encodeAnswerState($this->type, $method, ['message_meta_id' => $messageMeta->id, ...$params]));
         wHook()->api()->sendMessage([
             'chat_id' => wHook()->user()->telegramUser?->getAttribute('peer_id'),
             'text' => $prompt,
