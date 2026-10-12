@@ -162,7 +162,7 @@ class RolesAnswer extends StateAnswer
     private function finish(string $text, TelegramResponse $screen): void
     {
         $messageMeta = $this->requireMessageMeta();
-        wHook()->user()->changeState();
+        wHook()->conversation()->changeState();
         $this->reply($text);
         $messageMeta->updateAndContinueAction($screen);
     }
