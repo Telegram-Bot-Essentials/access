@@ -35,7 +35,6 @@ beforeEach(function () {
     $this->owner = BotUser::factory()->create([
         'bot_id' => $this->bot->id,
         'telegram_user_peer_id' => $this->bot->bot_owner_peer_id,
-        'state' => null,
     ]);
 });
 

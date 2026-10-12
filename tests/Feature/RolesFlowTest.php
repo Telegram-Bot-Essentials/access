@@ -18,7 +18,6 @@ beforeEach(function () {
     $this->owner = BotUser::factory()->create([
         'bot_id' => $this->bot->id,
         'telegram_user_peer_id' => $this->ownerPeer,
-        'state' => null,
     ]);
 });
 
@@ -27,7 +26,7 @@ it('creates a role from a typed name', function () {
     $this->postWebhookUpdate($this->bot, $this->makeMessageUpdate('Support', peerId: $this->ownerPeer))->assertOk();
 
     expect(Role::query()->where('bot_id', $this->bot->id)->pluck('name')->all())->toBe(['Support'])
-        ->and($this->owner->fresh()->state)->toBeNull();
+        ->and($this->owner->privateConversation()->state)->toBeNull();
 });
 
 it('refuses a duplicate name and keeps waiting for another', function () {
@@ -37,7 +36,7 @@ it('refuses a duplicate name and keeps waiting for another', function () {
     $this->postWebhookUpdate($this->bot, $this->makeMessageUpdate('Support', peerId: $this->ownerPeer))->assertOk();
 
     expect(Role::query()->count())->toBe(1)
-        ->and($this->owner->fresh()->state)->not->toBeNull();
+        ->and($this->owner->privateConversation()->state)->not->toBeNull();
 });
 
 it('adds a member by @username', function () {
