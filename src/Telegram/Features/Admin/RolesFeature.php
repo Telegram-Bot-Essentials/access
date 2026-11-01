@@ -4,9 +4,8 @@ namespace TelegramBotEssentials\Access\Telegram\Features\Admin;
 
 use Telegram\Bot\Keyboard\Keyboard;
 use TelegramBotEssentials\Access\Models\Role;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Essence\Models\BotUser;
-use TelegramBotEssentials\Essence\Support\Permission;
 use TelegramBotEssentials\Essence\Telegram\TelegramResponse;
 
 /**
@@ -31,7 +30,7 @@ class RolesFeature
                 Keyboard::inlineButton([
                     'text' => __('tbe-access::roles.index.keys.role', [
                         'name' => $role->name,
-                        'permissions' => count($role->permissionList()),
+                        'abilities' => count($role->abilityList()),
                         'members' => is_numeric($role->getAttribute('users_count')) ? (int) $role->getAttribute('users_count') : 0,
                     ]),
                     'callback_data' => encodeCallback(self::TYPE, 'show', [$role->id]),
@@ -54,19 +53,19 @@ class RolesFeature
 
     public static function show(Role $role): TelegramResponse
     {
-        $labels = array_map(fn (string $name) => '• '.self::label($name), $role->permissionList());
+        $labels = array_map(fn (string $name) => '• '.self::label($name), $role->abilityList());
 
         $text = __('tbe-access::roles.show.text', [
             'name' => $role->name,
-            'permissions' => $labels === [] ? __('tbe-access::roles.show.none') : implode("\n", $labels),
+            'abilities' => $labels === [] ? __('tbe-access::roles.show.none') : implode("\n", $labels),
             'members' => $role->users()->count(),
         ]);
 
         $replyMarkup = Keyboard::make()->inline()
             ->row([
                 Keyboard::inlineButton([
-                    'text' => __('tbe-access::roles.show.keys.permissions'),
-                    'callback_data' => encodeCallback(self::TYPE, 'permissions', [$role->id, 1]),
+                    'text' => __('tbe-access::roles.show.keys.abilities'),
+                    'callback_data' => encodeCallback(self::TYPE, 'abilities', [$role->id, 1]),
                 ]),
                 Keyboard::inlineButton([
                     'text' => __('tbe-access::roles.show.keys.members'),
@@ -102,13 +101,13 @@ class RolesFeature
         );
     }
 
-    /** The permission checklist: "*" first, then every registered permission by group. */
-    public static function permissions(Role $role, int $page): TelegramResponse
+    /** The ability checklist: "*" first, then every ability the bot's handlers name. */
+    public static function abilities(Role $role, int $page): TelegramResponse
     {
         $all = self::catalog();
         $pages = max(1, (int) ceil(count($all) / self::PER_PAGE));
         $page = min(max(1, $page), $pages);
-        $held = $role->permissionList();
+        $held = $role->abilityList();
 
         $replyMarkup = Keyboard::make()->inline();
 
@@ -121,11 +120,11 @@ class RolesFeature
             ]);
         }
 
-        self::pager($replyMarkup, 'permissions', $role->id, $page, $pages);
+        self::pager($replyMarkup, 'abilities', $role->id, $page, $pages);
         $replyMarkup->row([self::backButton('show', [$role->id])]);
 
         return new TelegramResponse(
-            text: __('tbe-access::roles.permissions.text', ['name' => $role->name]),
+            text: __('tbe-access::roles.abilities.text', ['name' => $role->name]),
             replyMarkup: $replyMarkup,
         );
     }
@@ -193,30 +192,29 @@ class RolesFeature
     }
 
     /**
-     * Every permission an owner can tick, wildcard first.
+     * Every ability an owner can tick, wildcard first, then essence's
+     * catalog grouped by package (first segment).
      *
      * @return list<string>
      */
     public static function catalog(): array
     {
-        $names = [Permissions::WILDCARD];
-        foreach (permissionRegistry()->grouped() as $permissions) {
-            foreach (array_keys($permissions) as $name) {
-                $names[] = $name;
-            }
+        $names = [Abilities::WILDCARD];
+        foreach (abilities()->grouped() as $group) {
+            array_push($names, ...$group);
         }
 
         return $names;
     }
 
     /**
-     * A short, stable id for a permission in callback data. Registry order
-     * depends on provider boot order, so a position would point at a
-     * different permission once a package is added.
+     * A short, stable id for an ability in callback data. Catalog order
+     * changes as handlers are added, so a position would point at a
+     * different ability once a package is installed.
      */
-    public static function hash(string $permission): string
+    public static function hash(string $ability): string
     {
-        return hash('crc32b', $permission);
+        return hash('crc32b', $ability);
     }
 
     public static function fromHash(string $hash): ?string
@@ -230,13 +228,13 @@ class RolesFeature
         return null;
     }
 
-    public static function label(string $permission): string
+    public static function label(string $ability): string
     {
-        if ($permission === Permissions::WILDCARD) {
-            return __('tbe-access::roles.permissions.wildcard');
+        if ($ability === Abilities::WILDCARD) {
+            return __('tbe-access::roles.abilities.wildcard');
         }
 
-        return permissionRegistry()->get($permission)?->label() ?? $permission;
+        return abilities()->label($ability);
     }
 
     public static function userName(BotUser $user): string
