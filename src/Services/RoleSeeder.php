@@ -17,7 +17,7 @@ class RoleSeeder
     {
         $created = [];
 
-        foreach ($this->defaultsFor($bot) as $name => $abilities) {
+        foreach ($this->defaults() as $name => $abilities) {
             $role = Role::withoutGlobalScopes()->firstOrCreate(
                 ['bot_id' => $bot->getKey(), 'name' => $name],
                 ['abilities' => $abilities],
@@ -31,17 +31,10 @@ class RoleSeeder
         return $created;
     }
 
-    public function isMainBot(Bot $bot): bool
-    {
-        $mainId = config('tbe-essence.main.unique_id');
-
-        return is_string($mainId) && $mainId !== '' && $bot->getAttribute('unique_id') === $mainId;
-    }
-
     /** @return array<string, list<string>> */
-    public function defaultsFor(Bot $bot): array
+    private function defaults(): array
     {
-        $defaults = config('tbe-access.default_roles.'.($this->isMainBot($bot) ? 'main' : 'sub'), []);
+        $defaults = config('tbe-access.default_roles', []);
 
         $roles = [];
         foreach (is_array($defaults) ? $defaults : [] as $name => $abilities) {
