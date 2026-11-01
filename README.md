@@ -2,27 +2,49 @@
 
 Owner-managed roles for bots built on [telegram-bot-essentials/essence](https://github.com/Telegram-Bot-Essentials/essence).
 
-Without this package, essence lets only the bot owner and the developer use anything that asks for a permission. Installing it lets the owner grant permissions to other users through flat roles:
+Essence has no access model: a handler names a Laravel Gate ability (`protected ?string $ability`), and with no Gate rule every ability is denied, the bot owner included. This package is the Gate rule. It lets the owner hand abilities to other users through flat roles:
 
-- A **role** is a name plus a set of permission names, per bot. Roles have no order and no inheritance, so "Support" and "Accountant" can overlap or not.
+- A **role** is a name plus a set of ability names, per bot. Roles have no order and no inheritance, so "Support" and "Accountant" can overlap or not.
 - A user can hold **several roles**; their access is the union.
-- The **bot owner** and the configured **developer** can always do everything.
+- The **bot owner** and the configured **developer** (`tbe-essence.developer.peer_id`) can always do everything.
 - Taking a role away takes its access away.
 
 ## How it plugs in
 
-- It rebinds essence's `AuthorizesAccess` contract with `RoleAuthorizer`, so every bus (commands, callbacks, reply keys, state answers, forms, menus) checks roles.
-- Permissions come from essence's `permissionRegistry()`, where each package registers its own names. This package adds:
+- It registers a `Gate::before` that answers for `BotUser`s only: owner or developer, or a role granting the ability (or `*`), passes; anything else is left to the app's other gates and, with none, denied. Web users (Telescope, Log Viewer, ...) are never answered here.
+- The abilities on the checklist come from essence's `abilities()` catalog, read from the handlers themselves, so a new handler's ability shows up without being listed anywhere. This package adds:
   - `access.roles.manage`: open the roles screens and give roles to users.
-  - `*`: everything, including permissions registered later.
+  - `*`: everything, including abilities added later.
 - It requires **user-management** and adds a **🛡 Roles** button to each user's profile there.
+
+## Default roles
+
+Every bot starts with the roles in `config/tbe-access.php` (publish with `php artisan vendor:publish --tag=tbe-access-config`):
+
+```php
+'default_roles' => [
+    // the bot whose unique_id is tbe-essence.main.unique_id
+    'main' => [
+        'Admin' => ['*'],
+        'Catalog' => ['shop.admin_panel', 'shop.catalog.manage'],
+    ],
+    // every other bot
+    'sub' => [
+        'Admin' => ['*'],
+    ],
+],
+```
+
+- A new bot gets them when it is created (a `Bot` is a stancl tenant, so `TenantCreated` fires).
+- Existing bots get the ones they lack from `php artisan tbe:access:sync-roles` (`--bot=<id|unique_id>` to limit it). It is safe to run on every deploy.
+- A role that already exists is never changed, so the owner's edits stay.
 
 ## Delegation
 
 Role management can be handed out by granting `access.roles.manage`. A delegate:
 
-- can grant only the permissions they hold themselves, and never `*` (unless they hold it);
-- can give, take, edit or delete only roles made entirely of permissions they hold;
+- can grant only the abilities they hold themselves, and never `*` (unless they hold it);
+- can give, take, edit or delete only roles made entirely of abilities they hold;
 - can't change their own roles;
 - can't change the owner's or the developer's roles.
 
@@ -33,11 +55,10 @@ The handlers enforce these rules themselves; callback data is never trusted.
 ```bash
 composer require telegram-bot-essentials/access
 php artisan migrate
+php artisan tbe:access:sync-roles
 ```
 
-Until roles are given out, only the owner and the developer can open anything that asks for a permission. The owner gives others access from the Roles screens.
-
-Companion reply keys aren't auto-registered, so add the Roles key to your admin menu:
+Companion reply keys aren't auto-registered, so add the Roles key to a menu:
 
 ```php
 // config/tbe-essence.php
@@ -51,14 +72,19 @@ Companion reply keys aren't auto-registered, so add the Roles key to your admin 
 ],
 ```
 
-## Declaring permissions in your app or package
+## Naming abilities in your app or package
 
 ```php
-// a service provider's boot()
-permissionRegistry()->register('shop.panels.manage', fn () => __('permissions.panels'), 'shop');
-
 // every handler of that feature: reply key, callback queries, state answers, forms
-protected ?string $permission = 'shop.panels.manage';
+protected ?string $ability = 'shop.panels.manage';
 ```
 
-Without this package installed, a named permission is for the owner and the developer only.
+Label it in an `abilities` translation file, keyed by the full name: `lang/<locale>/abilities.php` in the app, or the same file in a package's translation namespace.
+
+```php
+return [
+    'shop.panels.manage' => 'Manage panels',
+];
+```
+
+An ability that only code checks (`hasAccess('shop.reports.export')`) is not on any handler, so declare it in a service provider's `boot()` to put it on the checklist: `abilities()->declare('shop.reports.export');`.
