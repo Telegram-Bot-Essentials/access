@@ -4,7 +4,7 @@ namespace TelegramBotEssentials\Access\Telegram\StateAnswers\Admin;
 
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use TelegramBotEssentials\Access\Models\Role;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Essence\Models\BotUser;
 use TelegramBotEssentials\Essence\Telegram\StateAnswers\StateAnswer;
@@ -18,7 +18,7 @@ class RolesAnswer extends StateAnswer
 {
     protected string $type = RolesFeature::TYPE;
 
-    protected ?string $permission = Permissions::MANAGE_ROLES;
+    protected ?string $ability = Abilities::MANAGE_ROLES;
 
     /**
      * @throws TelegramSDKException
@@ -33,7 +33,7 @@ class RolesAnswer extends StateAnswer
         $role = Role::query()->create([
             'bot_id' => wHook()->bot()->getKey(),
             'name' => $name,
-            'permissions' => [],
+            'abilities' => [],
         ]);
 
         tbeLog('access')->audit('Created role '.$name, ['role_id' => $role->id]);
