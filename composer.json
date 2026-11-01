@@ -1,12 +1,12 @@
 {
     "name": "telegram-bot-essentials/access",
-    "description": "Role-based access control for telegram-bot-essentials bots: owner-managed roles and permissions",
+    "description": "Role-based access for telegram-bot-essentials bots: owner-managed roles of Gate abilities",
     "type": "library",
     "require": {
         "php": "^8.3",
         "laravel/framework": "^12 || ^13",
-        "telegram-bot-essentials/essence": "^0.18",
-        "telegram-bot-essentials/user-management": "~0.0.24"
+        "telegram-bot-essentials/essence": "^0.19.0-beta.3@beta",
+        "telegram-bot-essentials/user-management": "^0.0.27"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
@@ -72,6 +72,7 @@
         "bot",
         "laravel",
         "roles",
-        "permissions"
+        "abilities",
+        "gate"
     ]
 }
