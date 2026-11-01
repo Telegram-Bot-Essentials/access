@@ -2,13 +2,18 @@
 
 namespace TelegramBotEssentials\Access;
 
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Events\TenantCreated;
+use TelegramBotEssentials\Access\Console\SyncRolesCommand;
+use TelegramBotEssentials\Access\Listeners\SeedDefaultRoles;
 use TelegramBotEssentials\Access\Services\AccessManager;
-use TelegramBotEssentials\Access\Support\RoleAuthorizer;
+use TelegramBotEssentials\Access\Services\RoleSeeder;
+use TelegramBotEssentials\Access\Support\RoleGate;
 use TelegramBotEssentials\Access\Telegram\CallbackQueries\Admin\RolesQuery;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Access\Telegram\StateAnswers\Admin\RolesAnswer;
-use TelegramBotEssentials\Essence\Contracts\AuthorizesAccess;
 use TelegramBotEssentials\Essence\Models\BotUser;
 use TelegramBotEssentials\UserManagement\DTOs\UserSection;
 use TelegramBotEssentials\UserManagement\Enums\SectionMode;
@@ -19,11 +24,12 @@ class TbeAccessServiceProvider extends ServiceProvider
     {
         require_once __DIR__.'/helpers.php';
 
+        $this->mergeConfigFrom(__DIR__.'/../config/tbe-access.php', 'tbe-access');
+
         // Stateless: a user's roles are cached on the BotUser instance.
         $this->app->singleton(AccessManager::class, fn () => new AccessManager);
 
-        // Swaps essence's owner-only default for roles, for every bus at once.
-        $this->app->bind(AuthorizesAccess::class, RoleAuthorizer::class);
+        $this->app->singleton(RoleSeeder::class, fn () => new RoleSeeder);
     }
 
     public function boot(): void
@@ -33,11 +39,16 @@ class TbeAccessServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'tbe-access');
 
-        permissionRegistry()->register(
-            Permissions::MANAGE_ROLES,
-            fn () => __('tbe-access::permissions.manage_roles'),
-            'access',
-        );
+        // Roles decide every ability essence asks the Gate about, for every
+        // bus at once.
+        Gate::before(fn (mixed $user, string $ability) => app(RoleGate::class)->before($user, $ability));
+
+        // A Bot is a stancl tenant: creating one fires TenantCreated.
+        Event::listen(TenantCreated::class, SeedDefaultRoles::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([SyncRolesCommand::class]);
+        }
 
         callbackQueryBus()->addCallbackQueries([
             RolesQuery::class,
@@ -48,7 +59,7 @@ class TbeAccessServiceProvider extends ServiceProvider
         ]);
 
         // RolesKey is a companion ReplyKey, so the consuming app lists it in
-        // config('tbe-essence.keyboard.menus.admin') - see the README.
+        // a menu in config('tbe-essence.keyboard.menus') - see the README.
 
         $this->registerUserSection();
     }
@@ -75,6 +86,10 @@ class TbeAccessServiceProvider extends ServiceProvider
     protected function registerPublishing(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/tbe-access.php' => config_path('tbe-access.php'),
+            ], 'tbe-access-config');
+
             $this->publishes([
                 __DIR__.'/../lang' => resource_path('lang/vendor/tbe-access'),
             ], 'tbe-access-translations');
