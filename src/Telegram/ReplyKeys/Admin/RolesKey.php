@@ -3,13 +3,13 @@
 namespace TelegramBotEssentials\Access\Telegram\ReplyKeys\Admin;
 
 use Telegram\Bot\Exceptions\TelegramSDKException;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Essence\Telegram\ReplyKeys\ReplyKey;
 
 class RolesKey extends ReplyKey
 {
-    protected ?string $permission = Permissions::MANAGE_ROLES;
+    protected ?string $ability = Abilities::MANAGE_ROLES;
 
     protected function text(): string
     {
