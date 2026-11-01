@@ -30,7 +30,7 @@ it('creates a role from a typed name', function () {
 });
 
 it('refuses a duplicate name and keeps waiting for another', function () {
-    Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Support', 'permissions' => []]);
+    Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Support', 'abilities' => []]);
 
     $this->postWebhookUpdate($this->bot, $this->makeCallbackQueryUpdate(encodeCallback(RolesFeature::TYPE, 'create'), peerId: $this->ownerPeer))->assertOk();
     $this->postWebhookUpdate($this->bot, $this->makeMessageUpdate('Support', peerId: $this->ownerPeer))->assertOk();
@@ -40,7 +40,7 @@ it('refuses a duplicate name and keeps waiting for another', function () {
 });
 
 it('adds a member by @username', function () {
-    $role = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Support', 'permissions' => []]);
+    $role = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Support', 'abilities' => []]);
     $member = $this->makeBotUser($this->bot, 901);
     TelegramUser::query()->where('peer_id', 901)->update(['username' => 'helper']);
 
@@ -60,8 +60,8 @@ it('shows the Roles button on another user\'s profile, not on your own', functio
         ->and($keys($this->owner))->not->toContain('access_roles');
 });
 
-it('lists the registered permissions on the checklist, wildcard first', function () {
-    permissionRegistry()->register('reports.view', 'View reports', 'reports');
+it('lists the catalog abilities on the checklist, wildcard first', function () {
+    abilities()->declare('reports.view');
 
     expect(RolesFeature::catalog())->toContain('*', 'access.roles.manage', 'reports.view')
         ->and(RolesFeature::catalog()[0])->toBe('*')

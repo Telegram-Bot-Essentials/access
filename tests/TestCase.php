@@ -13,13 +13,23 @@ abstract class TestCase extends EssenceTestCase
 {
     protected function getPackageProviders($app): array
     {
-        // tbe-access first, as package discovery orders it in a real app
-        // ("access" < "essence"): its binding must survive essence's.
+        // In package-discovery order ("access" < "essence"), as in a real app.
         return [
             TbeAccessServiceProvider::class,
             ...parent::getPackageProviders($app),
             TbeUserManagementServiceProvider::class,
         ];
+    }
+
+    /**
+     * No default roles unless a test asks: makeBot() would otherwise give
+     * every bot an Admin role.
+     */
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('tbe-access.default_roles', ['main' => [], 'sub' => []]);
     }
 
     /**

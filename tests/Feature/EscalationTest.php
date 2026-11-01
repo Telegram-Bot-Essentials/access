@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use TelegramBotEssentials\Access\Models\Role;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Essence\Models\BotUser;
 
@@ -14,8 +14,8 @@ use TelegramBotEssentials\Essence\Models\BotUser;
  */
 
 beforeEach(function () {
-    permissionRegistry()->register('reports.view', 'View reports', 'reports');
-    permissionRegistry()->register('panels.manage', 'Manage panels', 'panels');
+    abilities()->declare('reports.view');
+    abilities()->declare('panels.manage');
 
     $this->bot = $this->makeBot();
 
@@ -24,13 +24,13 @@ beforeEach(function () {
     $this->delegateRole = Role::query()->create([
         'bot_id' => $this->bot->id,
         'name' => 'Delegate',
-        'permissions' => [Permissions::MANAGE_ROLES, 'reports.view'],
+        'abilities' => [Abilities::MANAGE_ROLES, 'reports.view'],
     ]);
     $this->delegateRole->users()->attach($this->delegate->id);
 
     $this->target = $this->makeBotUser($this->bot, 802);
-    $this->empty = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Empty', 'permissions' => []]);
-    $this->panels = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Panels', 'permissions' => ['panels.manage']]);
+    $this->empty = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Empty', 'abilities' => []]);
+    $this->panels = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Panels', 'abilities' => ['panels.manage']]);
 
     $this->owner = BotUser::factory()->create([
         'bot_id' => $this->bot->id,
@@ -43,22 +43,22 @@ function memberIds(Role $role): array
     return $role->users()->pluck('bot_users.id')->all();
 }
 
-it('lets a delegate grant a permission they hold', function () {
+it('lets a delegate grant an ability they hold', function () {
     $this->pressRoles(801, 'toggle', [$this->empty->id, RolesFeature::hash('reports.view'), 1]);
 
-    expect($this->empty->fresh()->permissionList())->toBe(['reports.view']);
+    expect($this->empty->fresh()->abilityList())->toBe(['reports.view']);
 });
 
 it('stops a delegate granting a permission they lack', function () {
     $this->pressRoles(801, 'toggle', [$this->empty->id, RolesFeature::hash('panels.manage'), 1]);
 
-    expect($this->empty->fresh()->permissionList())->toBe([]);
+    expect($this->empty->fresh()->abilityList())->toBe([]);
 });
 
 it('stops a delegate granting the wildcard', function () {
-    $this->pressRoles(801, 'toggle', [$this->empty->id, RolesFeature::hash(Permissions::WILDCARD), 1]);
+    $this->pressRoles(801, 'toggle', [$this->empty->id, RolesFeature::hash(Abilities::WILDCARD), 1]);
 
-    expect($this->empty->fresh()->permissionList())->toBe([]);
+    expect($this->empty->fresh()->abilityList())->toBe([]);
 });
 
 it('stops a delegate giving away a role holding more than they have', function () {
@@ -71,10 +71,10 @@ it('stops a delegate editing a role holding more than they have', function () {
     $this->pressRoles(801, 'toggle', [$this->panels->id, RolesFeature::hash('reports.view'), 1]);
     $this->pressRoles(801, 'confirmDelete', [$this->panels->id]);
 
-    expect($this->panels->fresh()?->permissionList())->toBe(['panels.manage']);
+    expect($this->panels->fresh()?->abilityList())->toBe(['panels.manage']);
 });
 
-it('lets a delegate give a role within their own permissions', function () {
+it('lets a delegate give a role within their own abilities', function () {
     $this->pressRoles(801, 'toggleUserRole', [$this->target->id, $this->empty->id]);
 
     expect(memberIds($this->empty))->toBe([$this->target->id]);
@@ -95,15 +95,15 @@ it('stops anyone changing the owner\'s roles', function () {
 it('lets the owner do everything', function () {
     $ownerPeer = (int) $this->bot->bot_owner_peer_id;
 
-    $this->pressRoles($ownerPeer, 'toggle', [$this->empty->id, RolesFeature::hash(Permissions::WILDCARD), 1]);
+    $this->pressRoles($ownerPeer, 'toggle', [$this->empty->id, RolesFeature::hash(Abilities::WILDCARD), 1]);
     $this->pressRoles($ownerPeer, 'toggleUserRole', [$this->target->id, $this->panels->id]);
 
-    expect($this->empty->fresh()->permissionList())->toBe([Permissions::WILDCARD])
+    expect($this->empty->fresh()->abilityList())->toBe([Abilities::WILDCARD])
         ->and(memberIds($this->panels))->toBe([$this->target->id]);
 });
 
-it('keeps users without the manage permission out entirely', function () {
+it('keeps users without the manage ability out entirely', function () {
     $this->pressRoles(802, 'toggle', [$this->empty->id, RolesFeature::hash('reports.view'), 1]);
 
-    expect($this->empty->fresh()->permissionList())->toBe([]);
+    expect($this->empty->fresh()->abilityList())->toBe([]);
 });
