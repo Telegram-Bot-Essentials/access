@@ -10,23 +10,23 @@ return [
             'empty' => "🛡 نقش‌ها\n\nهنوز نقشی ساخته نشده. یک نقش بسازید، دسترسی‌هایش را تیک بزنید و آن را به کاربران بدهید.",
         ],
         'keys' => [
-            'role' => ':name · :permissions دسترسی · :members عضو',
+            'role' => ':name · :abilities دسترسی · :members عضو',
             'create' => '➕ نقش جدید',
         ],
     ],
 
     'show' => [
-        'text' => "🛡 :name\n\nدسترسی‌ها:\n:permissions\n\nاعضا: :members",
+        'text' => "🛡 :name\n\nدسترسی‌ها:\n:abilities\n\nاعضا: :members",
         'none' => '(هیچ)',
         'keys' => [
-            'permissions' => '🔐 دسترسی‌ها',
+            'abilities' => '🔐 دسترسی‌ها',
             'members' => '👥 اعضا',
             'rename' => '✏️ تغییر نام',
             'delete' => '🗑 حذف',
         ],
     ],
 
-    'permissions' => [
+    'abilities' => [
         'text' => "🔐 دسترسی‌های «:name»\n\nبرای روشن یا خاموش کردن هر مورد روی آن بزنید.",
         'wildcard' => '⭐ همه دسترسی‌ها',
     ],
