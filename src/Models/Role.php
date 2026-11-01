@@ -5,14 +5,14 @@ namespace TelegramBotEssentials\Access\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Stancl\Tenancy\Database\Concerns\BelongsToTenant;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Essence\Models\BotUser;
 
 /**
  * @property int $id
  * @property int $bot_id
  * @property string $name
- * @property list<string> $permissions
+ * @property list<string> $abilities
  */
 class Role extends Model
 {
@@ -20,10 +20,10 @@ class Role extends Model
 
     protected $table = 'access_roles';
 
-    protected $fillable = ['bot_id', 'name', 'permissions'];
+    protected $fillable = ['bot_id', 'name', 'abilities'];
 
     protected $casts = [
-        'permissions' => 'array',
+        'abilities' => 'array',
     ];
 
     /** @return BelongsToMany<BotUser, $this> */
@@ -33,17 +33,17 @@ class Role extends Model
     }
 
     /** @return list<string> */
-    public function permissionList(): array
+    public function abilityList(): array
     {
-        $permissions = $this->getAttribute('permissions');
+        $abilities = $this->getAttribute('abilities');
 
-        return is_array($permissions) ? array_values(array_filter($permissions, 'is_string')) : [];
+        return is_array($abilities) ? array_values(array_filter($abilities, 'is_string')) : [];
     }
 
-    public function grants(string $permission): bool
+    public function grants(string $ability): bool
     {
-        $permissions = $this->permissionList();
+        $abilities = $this->abilityList();
 
-        return in_array(Permissions::WILDCARD, $permissions, true) || in_array($permission, $permissions, true);
+        return in_array(Abilities::WILDCARD, $abilities, true) || in_array($ability, $abilities, true);
     }
 }
