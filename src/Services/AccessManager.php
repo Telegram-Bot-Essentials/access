@@ -5,9 +5,8 @@ namespace TelegramBotEssentials\Access\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use TelegramBotEssentials\Access\Models\Role;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Essence\Models\BotUser;
-use TelegramBotEssentials\Essence\Support\DefaultAuthorizer;
 
 /**
  * Who holds what, and who may hand what out.
@@ -19,7 +18,7 @@ use TelegramBotEssentials\Essence\Support\DefaultAuthorizer;
  * Escalation rules - every mutating handler goes through the methods
  * below, since callback data is client-supplied:
  *  - only the owner, the developer or a wildcard holder may grant "*";
- *  - anyone else may grant only permissions they hold themselves;
+ *  - anyone else may grant only abilities they hold themselves;
  *  - nobody changes their own roles;
  *  - nobody changes the roles of the owner or the developer.
  */
@@ -53,40 +52,54 @@ class AccessManager
     }
 
     /** @return list<string> */
-    public function permissionsOf(BotUser $user): array
+    public function abilitiesOf(BotUser $user): array
     {
-        $permissions = [];
+        $abilities = [];
         foreach ($this->rolesOf($user) as $role) {
-            array_push($permissions, ...$role->permissionList());
+            array_push($abilities, ...$role->abilityList());
         }
 
-        return array_values(array_unique($permissions));
+        return array_values(array_unique($abilities));
     }
 
-    public function holds(BotUser $user, string $permission): bool
+    public function holds(BotUser $user, string $ability): bool
     {
-        $permissions = $this->permissionsOf($user);
+        $abilities = $this->abilitiesOf($user);
 
-        return in_array(Permissions::WILDCARD, $permissions, true) || in_array($permission, $permissions, true);
+        return in_array(Abilities::WILDCARD, $abilities, true) || in_array($ability, $abilities, true);
     }
 
+    /** The bot's owner or the configured developer: they hold everything, with or without roles. */
     public function isSuperuser(BotUser $user): bool
     {
-        return app(DefaultAuthorizer::class)->isOwnerOrDeveloper($user);
+        $peerId = $user->getAttribute('telegram_user_peer_id');
+        if (! is_int($peerId) && ! is_string($peerId)) {
+            return false;
+        }
+        $peerId = (string) $peerId;
+
+        $developer = config('tbe-essence.developer.peer_id');
+        if ((is_int($developer) || is_string($developer)) && (string) $developer !== '' && (string) $developer === $peerId) {
+            return true;
+        }
+
+        $owner = $user->bot?->getAttribute('bot_owner_peer_id');
+
+        return (is_int($owner) || is_string($owner)) && (string) $owner === $peerId;
     }
 
     public function canManage(BotUser $actor): bool
     {
-        return $this->isSuperuser($actor) || $this->holds($actor, Permissions::MANAGE_ROLES);
+        return $this->isSuperuser($actor) || $this->holds($actor, Abilities::MANAGE_ROLES);
     }
 
-    public function canGrant(BotUser $actor, string $permission): bool
+    public function canGrant(BotUser $actor, string $ability): bool
     {
-        if ($this->isSuperuser($actor) || $this->holds($actor, Permissions::WILDCARD)) {
+        if ($this->isSuperuser($actor) || $this->holds($actor, Abilities::WILDCARD)) {
             return true;
         }
 
-        return $permission !== Permissions::WILDCARD && $this->holds($actor, $permission);
+        return $ability !== Abilities::WILDCARD && $this->holds($actor, $ability);
     }
 
     /** Whether $actor could grant everything $role holds - required to give, take, edit or delete it. */
@@ -96,8 +109,8 @@ class AccessManager
             return false;
         }
 
-        foreach ($role->permissionList() as $permission) {
-            if (! $this->canGrant($actor, $permission)) {
+        foreach ($role->abilityList() as $ability) {
+            if (! $this->canGrant($actor, $ability)) {
                 return false;
             }
         }
@@ -137,17 +150,17 @@ class AccessManager
         return true;
     }
 
-    /** Add or remove one permission on a role. */
-    public function togglePermission(BotUser $actor, Role $role, string $permission): bool
+    /** Add or remove one ability on a role. */
+    public function toggleAbility(BotUser $actor, Role $role, string $ability): bool
     {
-        if (! $this->canGrantRole($actor, $role) || ! $this->canGrant($actor, $permission)) {
+        if (! $this->canGrantRole($actor, $role) || ! $this->canGrant($actor, $ability)) {
             return false;
         }
 
-        $permissions = $role->permissionList();
-        $role->permissions = in_array($permission, $permissions, true)
-            ? array_values(array_diff($permissions, [$permission]))
-            : [...$permissions, $permission];
+        $abilities = $role->abilityList();
+        $role->abilities = in_array($ability, $abilities, true)
+            ? array_values(array_diff($abilities, [$ability]))
+            : [...$abilities, $ability];
         $role->save();
 
         return true;
