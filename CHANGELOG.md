@@ -7,6 +7,8 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+## [0.1.0-beta.3] - 2026-11-01
+
 ### Changed
 
 - `tbe-access.default_roles` is one list, role name => abilities, for every
