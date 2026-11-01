@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use TelegramBotEssentials\Access\Models\Role;
 use TelegramBotEssentials\Access\Abilities;
+use TelegramBotEssentials\Access\Models\Role;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Essence\Models\BotUser;
 
