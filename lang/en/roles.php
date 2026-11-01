@@ -10,23 +10,23 @@ return [
             'empty' => "🛡 Roles\n\nNo roles yet. Create one, tick its permissions, then give it to users.",
         ],
         'keys' => [
-            'role' => ':name · :permissions permissions · :members members',
+            'role' => ':name · :abilities permissions · :members members',
             'create' => '➕ New role',
         ],
     ],
 
     'show' => [
-        'text' => "🛡 :name\n\nPermissions:\n:permissions\n\nMembers: :members",
+        'text' => "🛡 :name\n\nPermissions:\n:abilities\n\nMembers: :members",
         'none' => '(none)',
         'keys' => [
-            'permissions' => '🔐 Permissions',
+            'abilities' => '🔐 Permissions',
             'members' => '👥 Members',
             'rename' => '✏️ Rename',
             'delete' => '🗑 Delete',
         ],
     ],
 
-    'permissions' => [
+    'abilities' => [
         'text' => "🔐 Permissions of “:name”\n\nTap one to turn it on or off.",
         'wildcard' => '⭐ Everything',
     ],
