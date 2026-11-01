@@ -4,8 +4,8 @@ namespace TelegramBotEssentials\Access\Services;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use TelegramBotEssentials\Access\Models\Role;
 use TelegramBotEssentials\Access\Abilities;
+use TelegramBotEssentials\Access\Models\Role;
 use TelegramBotEssentials\Essence\Models\BotUser;
 
 /**
