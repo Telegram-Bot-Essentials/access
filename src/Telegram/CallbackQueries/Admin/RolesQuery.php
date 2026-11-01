@@ -5,7 +5,7 @@ namespace TelegramBotEssentials\Access\Telegram\CallbackQueries\Admin;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Telegram\Bot\Exceptions\TelegramSDKException;
 use TelegramBotEssentials\Access\Models\Role;
-use TelegramBotEssentials\Access\Permissions;
+use TelegramBotEssentials\Access\Abilities;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Essence\Exceptions\LogicException;
 use TelegramBotEssentials\Essence\Models\BotUser;
@@ -16,7 +16,7 @@ class RolesQuery extends CallbackQuery
 {
     protected string $type = RolesFeature::TYPE;
 
-    protected ?string $permission = Permissions::MANAGE_ROLES;
+    protected ?string $ability = Abilities::MANAGE_ROLES;
 
     /**
      * @throws TelegramSDKException
@@ -37,9 +37,9 @@ class RolesQuery extends CallbackQuery
     /**
      * @throws TelegramSDKException
      */
-    public function permissions(Role $role, int $page = 1): void
+    public function abilities(Role $role, int $page = 1): void
     {
-        RolesFeature::permissions($role, $page)->update();
+        RolesFeature::abilities($role, $page)->update();
     }
 
     /**
@@ -47,17 +47,17 @@ class RolesQuery extends CallbackQuery
      */
     public function toggle(Role $role, string $hash, int $page = 1): void
     {
-        $permission = RolesFeature::fromHash($hash);
+        $ability = RolesFeature::fromHash($hash);
 
-        if ($permission === null || ! accessManager()->togglePermission(wHook()->user(), $role, $permission)) {
+        if ($ability === null || ! accessManager()->toggleAbility(wHook()->user(), $role, $ability)) {
             $this->deny();
 
             return;
         }
 
-        $this->audit('Toggled '.$permission.' on role '.$role->name, ['role_id' => $role->id, 'permission' => $permission]);
+        $this->audit('Toggled '.$ability.' on role '.$role->name, ['role_id' => $role->id, 'ability' => $ability]);
 
-        RolesFeature::permissions($role, $page)->update();
+        RolesFeature::abilities($role, $page)->update();
     }
 
     /**
@@ -151,7 +151,7 @@ class RolesQuery extends CallbackQuery
             return;
         }
 
-        $this->audit('Deleted role '.$role->name, ['role_id' => $role->id, 'permissions' => $role->permissionList()]);
+        $this->audit('Deleted role '.$role->name, ['role_id' => $role->id, 'abilities' => $role->abilityList()]);
         $role->delete();
 
         RolesFeature::index()->answer(__('tbe-access::roles.delete.done'))->update();
