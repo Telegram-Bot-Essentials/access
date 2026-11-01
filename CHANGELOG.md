@@ -7,6 +7,8 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+## [0.1.0-beta.1] - 2026-11-01
+
 Requires essence 0.19, which has no access model: handlers name Laravel
 Gate abilities. Roles now answer the Gate, and hold abilities. Breaking
 (see **Upgrading**).
