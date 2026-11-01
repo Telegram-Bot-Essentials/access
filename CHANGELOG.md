@@ -7,6 +7,23 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+### Changed
+
+- `tbe-access.default_roles` is one list, role name => abilities, for every
+  bot. The `main` and `sub` keys are gone, and the package no longer reads
+  `tbe-essence.main.unique_id`. Breaking for a published config (see
+  **Upgrading**).
+
+### Removed
+
+- `RoleSeeder::isMainBot()` and `RoleSeeder::defaultsFor()`.
+
+### Upgrading
+
+- In a published `config/tbe-access.php`, move the roles out of `main` and
+  `sub` so they sit directly under `default_roles`. Roles that already exist
+  on a bot are not touched.
+
 ## [0.1.0-beta.2] - 2026-11-01
 
 ### Fixed

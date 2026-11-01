@@ -23,15 +23,8 @@ Every bot starts with the roles in `config/tbe-access.php` (publish with `php ar
 
 ```php
 'default_roles' => [
-    // the bot whose unique_id is tbe-essence.main.unique_id
-    'main' => [
-        'Admin' => ['*'],
-        'Catalog' => ['shop.admin_panel', 'shop.catalog.manage'],
-    ],
-    // every other bot
-    'sub' => [
-        'Admin' => ['*'],
-    ],
+    'Admin' => ['*'],
+    'Catalog' => ['shop.admin_panel', 'shop.catalog.manage'],
 ],
 ```
 
