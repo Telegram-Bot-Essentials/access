@@ -29,7 +29,7 @@ abstract class TestCase extends EssenceTestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('tbe-access.default_roles', ['main' => [], 'sub' => []]);
+        $app['config']->set('tbe-access.default_roles', []);
     }
 
     /**

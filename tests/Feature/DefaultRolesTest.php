@@ -17,32 +17,29 @@ function roleNames(Bot $bot): array
 }
 
 beforeEach(function () {
-    config([
-        'tbe-essence.main.unique_id' => 'main',
-        'tbe-access.default_roles' => [
-            'main' => ['Admin' => ['*'], 'Support' => ['user-management.users.manage']],
-            'sub' => ['Admin' => ['*']],
-        ],
-    ]);
+    config(['tbe-access.default_roles' => ['Admin' => ['*'], 'Support' => ['user-management.users.manage']]]);
 });
 
-it('seeds the main bot\'s default roles when it is created', function () {
-    $bot = Bot::factory()->create(['unique_id' => 'main']);
+it('seeds the default roles when a bot is created', function () {
+    $bot = Bot::factory()->create();
 
     expect(roleNames($bot))->toBe(['Admin' => ['*'], 'Support' => ['user-management.users.manage']]);
 });
 
-it('seeds the sub-bot defaults on any other bot', function () {
-    $bot = Bot::factory()->create();
+it('seeds the same roles whatever the bot', function () {
+    config(['tbe-essence.main.unique_id' => 'main']);
 
-    expect(roleNames($bot))->toBe(['Admin' => ['*']]);
+    $main = Bot::factory()->create(['unique_id' => 'main']);
+    $other = Bot::factory()->create();
+
+    expect(roleNames($main))->toBe(roleNames($other));
 });
 
 it('creates missing roles on existing bots and leaves edited ones alone', function () {
-    config(['tbe-access.default_roles.sub' => []]);
+    config(['tbe-access.default_roles' => []]);
     $bot = Bot::factory()->create();
     Role::withoutGlobalScopes()->create(['bot_id' => $bot->id, 'name' => 'Admin', 'abilities' => ['reports.view']]);
-    config(['tbe-access.default_roles.sub' => ['Admin' => ['*'], 'Billing' => ['billing.invoices.manage']]]);
+    config(['tbe-access.default_roles' => ['Admin' => ['*'], 'Billing' => ['billing.invoices.manage']]]);
 
     $this->artisan('tbe:access:sync-roles')->assertSuccessful();
 
@@ -50,10 +47,10 @@ it('creates missing roles on existing bots and leaves edited ones alone', functi
 });
 
 it('syncs only the bots it is given', function () {
-    config(['tbe-access.default_roles.sub' => []]);
+    config(['tbe-access.default_roles' => []]);
     $one = Bot::factory()->create();
     $two = Bot::factory()->create();
-    config(['tbe-access.default_roles.sub' => ['Admin' => ['*']]]);
+    config(['tbe-access.default_roles' => ['Admin' => ['*']]]);
 
     $this->artisan('tbe:access:sync-roles', ['--bot' => [(string) $one->id]])->assertSuccessful();
 
@@ -67,5 +64,5 @@ it('is safe to run again', function () {
     $this->artisan('tbe:access:sync-roles')->assertSuccessful();
     $this->artisan('tbe:access:sync-roles')->assertSuccessful();
 
-    expect(Role::withoutGlobalScopes()->where('bot_id', $bot->id)->count())->toBe(1);
+    expect(Role::withoutGlobalScopes()->where('bot_id', $bot->id)->count())->toBe(2);
 });
