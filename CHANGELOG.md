@@ -7,6 +7,47 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+Requires essence 0.19, which has no access model: handlers name Laravel
+Gate abilities. Roles now answer the Gate, and hold abilities. Breaking
+(see **Upgrading**).
+
+### Added
+
+- Default roles per bot, from `tbe-access.default_roles` (`main` for the
+  main bot, `sub` for the rest; `Admin => ['*']` out of the box). A new bot
+  gets them on creation (stancl's `TenantCreated`).
+- `tbe:access:sync-roles [--bot=]` creates the default roles existing bots
+  lack. It never changes a role that exists.
+- `config/tbe-access.php`, publishable with `--tag=tbe-access-config`.
+
+### Changed
+
+- `RoleAuthorizer` is `RoleGate`, registered as a `Gate::before`. It answers
+  for `BotUser`s only: owner, developer, or a role granting the ability
+  passes; anything else gets `null`, so the app's other gates still decide.
+- The roles checklist lists essence's `abilities()` catalog, read from the
+  handlers, in place of the removed permission registry.
+- `Permissions` is `Abilities`; the `access_roles.permissions` column is
+  `abilities` (a migration renames it). `Role::permissionList()` is
+  `abilityList()`, `AccessManager::permissionsOf()` is `abilitiesOf()` and
+  `togglePermission()` is `toggleAbility()`. The checklist's callback
+  method is `abilities`.
+- `AccessManager::isSuperuser()` checks the owner and the developer itself.
+- The `access.roles.manage` label lives in `lang/<locale>/abilities.php`,
+  keyed by the ability name.
+
+### Removed
+
+- `RoleAuthorizer::usersWith()`: essence's `ownerAlert()` goes to the owner
+  only.
+
+### Upgrading
+
+1. `php artisan migrate`, then `php artisan tbe:access:sync-roles`.
+2. Rename `permissions` to `abilities` wherever you create roles
+   (`Role::create([... 'abilities' => [...]])`).
+3. Publish the config if you want default roles other than `Admin`.
+
 ## [0.0.2] - 2026-10-12
 
 ### Changed
