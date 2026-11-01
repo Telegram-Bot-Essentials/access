@@ -7,6 +7,14 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+## [0.1.0-beta.2] - 2026-11-01
+
+### Fixed
+
+- Requires user-management `~0.0.27` again, not `^0.0.27`, which on 0.0.x
+  allowed only that one patch and blocked every later user-management
+  release.
+
 ## [0.1.0-beta.1] - 2026-11-01
 
 Requires essence 0.19, which has no access model: handlers name Laravel
