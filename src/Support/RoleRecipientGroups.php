@@ -18,7 +18,12 @@ class RoleRecipientGroups implements RecipientGroups
         $options = [];
 
         foreach ($this->roles($bot)->orderBy('name')->get() as $role) {
-            $options[(string) $role->getKey()] = $role->name;
+            $name = $role->getAttribute('name');
+            $id = $role->getKey();
+
+            if (is_string($name) && is_scalar($id)) {
+                $options[(string) $id] = $name;
+            }
         }
 
         return $options;
@@ -29,19 +34,24 @@ class RoleRecipientGroups implements RecipientGroups
         $roleIds = array_values(array_filter($ids, 'is_numeric'));
 
         if ($roleIds === []) {
-            return collect();
+            return new Collection;
         }
 
-        return BotUser::query()
+        return new Collection(BotUser::query()
             ->where('bot_id', $bot->getKey())
             ->where('has_private_chat', true)
             ->whereIn('id', DB::table('access_role_user')
                 ->select('bot_user_id')
                 ->whereIn('role_id', $this->roles($bot)->whereIn('id', $roleIds)->select('id')))
-            ->get();
+            ->get()
+            ->all());
     }
 
-    /** By the given bot explicitly: the tenant scope only applies once tenancy is initialised. */
+    /**
+     * By the given bot explicitly: the tenant scope only applies once tenancy is initialised.
+     *
+     * @return Builder<Role>
+     */
     private function roles(Bot $bot): Builder
     {
         return Role::withoutGlobalScopes()->where('bot_id', $bot->getKey());
