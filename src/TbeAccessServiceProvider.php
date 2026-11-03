@@ -80,8 +80,7 @@ class TbeAccessServiceProvider extends ServiceProvider
 
     /**
      * A "Roles" button on each user's user-management profile, shown only
-     * to a viewer who may change that user's roles - never on their own
-     * profile, nor on the owner's or the developer's.
+     * to a viewer who may change that user's roles.
      */
     private function registerUserSection(): void
     {
