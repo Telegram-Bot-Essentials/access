@@ -67,3 +67,18 @@ it('lists the catalog abilities on the checklist, wildcard first', function () {
         ->and(RolesFeature::catalog()[0])->toBe('*')
         ->and(RolesFeature::fromHash(RolesFeature::hash('reports.view')))->toBe('reports.view');
 });
+
+it('filters the user list down to those holding a role', function () {
+    $bot = $this->makeBot();
+    $staff = $this->makeBotUser($bot, 7501);
+    $member = $this->makeBotUser($bot, 7502);
+    $role = Role::withoutGlobalScopes()->create(['bot_id' => $bot->id, 'name' => 'Sales', 'abilities' => []]);
+    $role->users()->attach($staff->id);
+
+    $ids = botUserFilters()->getFilter('with_role')
+        ->applyTo(BotUser::query()->whereIn('id', [$staff->id, $member->id]))
+        ->pluck('id')
+        ->all();
+
+    expect($ids)->toBe([$staff->id]);
+});
