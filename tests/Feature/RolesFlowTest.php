@@ -50,14 +50,14 @@ it('adds a member by @username', function () {
     expect($role->users()->pluck('bot_users.id')->all())->toBe([$member->id]);
 });
 
-it('shows the Roles button on another user\'s profile, not on your own', function () {
+it('shows the owner the Roles button on every profile, their own included', function () {
     $member = $this->makeBotUser($this->bot, 902);
     $this->postWebhookUpdate($this->bot, $this->makeMessageUpdate('hi', peerId: $this->ownerPeer))->assertOk();
 
     $keys = fn (BotUser $user) => userManagementSections()->getSectionsFor($user)->pluck('key')->all();
 
     expect($keys($member))->toContain('access_roles')
-        ->and($keys($this->owner))->not->toContain('access_roles');
+        ->and($keys($this->owner))->toContain('access_roles');
 });
 
 it('lists the catalog abilities on the checklist, wildcard first', function () {

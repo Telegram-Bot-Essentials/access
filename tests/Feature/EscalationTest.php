@@ -107,3 +107,19 @@ it('keeps users without the manage ability out entirely', function () {
 
     expect($this->empty->fresh()->abilityList())->toBe([]);
 });
+
+it('lets the owner give a role to themselves', function () {
+    $role = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Alerts', 'abilities' => []]);
+
+    expect(accessManager()->assign($this->owner, $this->owner, $role))->toBeTrue()
+        ->and(accessManager()->rolesOf($this->owner->fresh())->pluck('name')->all())->toContain('Alerts')
+        ->and(accessManager()->revoke($this->owner, $this->owner, $role))->toBeTrue();
+});
+
+it('still stops a delegate touching the owner\'s roles or their own', function () {
+    $role = Role::query()->create(['bot_id' => $this->bot->id, 'name' => 'Alerts', 'abilities' => []]);
+
+    expect(accessManager()->canChangeRolesOf($this->delegate, $this->owner))->toBeFalse()
+        ->and(accessManager()->assign($this->delegate, $this->owner, $role))->toBeFalse()
+        ->and(accessManager()->canChangeRolesOf($this->delegate, $this->delegate))->toBeFalse();
+});
