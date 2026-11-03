@@ -71,5 +71,6 @@ return [
         'text' => "🛡 Roles of :name\n\nTap a role to give or take it.",
         'section' => '🛡 Roles: :roles',
         'noRoles' => 'none',
+        'filter' => '🛡 With a role',
     ],
 ];
