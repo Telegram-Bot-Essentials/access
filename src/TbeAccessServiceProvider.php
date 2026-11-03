@@ -13,9 +13,11 @@ use TelegramBotEssentials\Access\Listeners\SeedDefaultRoles;
 use TelegramBotEssentials\Access\Services\AccessManager;
 use TelegramBotEssentials\Access\Services\RoleSeeder;
 use TelegramBotEssentials\Access\Support\RoleGate;
+use TelegramBotEssentials\Access\Support\RoleRecipientGroups;
 use TelegramBotEssentials\Access\Telegram\CallbackQueries\Admin\RolesQuery;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Access\Telegram\StateAnswers\Admin\RolesAnswer;
+use TelegramBotEssentials\Essence\Contracts\RecipientGroups;
 use TelegramBotEssentials\Essence\Models\BotUser;
 use TelegramBotEssentials\UserManagement\DTOs\BotUserFilter;
 use TelegramBotEssentials\UserManagement\DTOs\UserSection;
@@ -33,6 +35,9 @@ class TbeAccessServiceProvider extends ServiceProvider
         $this->app->singleton(AccessManager::class, fn () => new AccessManager);
 
         $this->app->singleton(RoleSeeder::class, fn () => new RoleSeeder);
+
+        // Other packages address roles through this, without knowing about roles.
+        $this->app->bind(RecipientGroups::class, RoleRecipientGroups::class);
     }
 
     public function boot(): void
