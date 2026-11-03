@@ -118,12 +118,21 @@ class AccessManager
         return true;
     }
 
+    /**
+     * Nobody changes their own roles, or they could raise themselves. Except the
+     * owner and the developer, who hold everything anyway: to them a role only
+     * means being part of what it is used for, such as who gets an alert. Only
+     * they can change those of each other, never a delegate.
+     */
     public function canChangeRolesOf(BotUser $actor, BotUser $target): bool
     {
-        return $this->canManage($actor)
-            && $actor->getKey() !== $target->getKey()
-            && $this->sameBot($actor, $target->getAttribute('bot_id'))
-            && ! $this->isSuperuser($target);
+        if (! $this->canManage($actor) || ! $this->sameBot($actor, $target->getAttribute('bot_id'))) {
+            return false;
+        }
+
+        return $this->isSuperuser($target)
+            ? $this->isSuperuser($actor)
+            : $actor->getKey() !== $target->getKey();
     }
 
     public function assign(BotUser $actor, BotUser $target, Role $role): bool
