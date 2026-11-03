@@ -7,6 +7,10 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+### Added
+
+- A "With a role" filter on the admin user list, to find the bot's staff.
+
 ## [0.1.0-beta.3] - 2026-11-01
 
 ### Changed
