@@ -2,6 +2,8 @@
 
 namespace TelegramBotEssentials\Access;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -15,6 +17,7 @@ use TelegramBotEssentials\Access\Telegram\CallbackQueries\Admin\RolesQuery;
 use TelegramBotEssentials\Access\Telegram\Features\Admin\RolesFeature;
 use TelegramBotEssentials\Access\Telegram\StateAnswers\Admin\RolesAnswer;
 use TelegramBotEssentials\Essence\Models\BotUser;
+use TelegramBotEssentials\UserManagement\DTOs\BotUserFilter;
 use TelegramBotEssentials\UserManagement\DTOs\UserSection;
 use TelegramBotEssentials\UserManagement\Enums\SectionMode;
 
@@ -62,6 +65,17 @@ class TbeAccessServiceProvider extends ServiceProvider
         // a menu in config('tbe-essence.keyboard.menus') - see the README.
 
         $this->registerUserSection();
+        $this->registerUserFilter();
+    }
+
+    /** Who holds any role: the bot's staff, in the admin user list. */
+    private function registerUserFilter(): void
+    {
+        botUserFilters()->addFilter(new BotUserFilter(
+            key: 'with_role',
+            label: fn () => __('tbe-access::roles.user.filter'),
+            apply: fn (Builder $query) => $query->whereIn('id', DB::table('access_role_user')->select('bot_user_id')),
+        ));
     }
 
     /**
