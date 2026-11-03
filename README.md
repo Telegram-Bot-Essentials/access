@@ -41,6 +41,8 @@ Role management can be handed out by granting `access.roles.manage`. A delegate:
 - can't change their own roles;
 - can't change the owner's or the developer's roles.
 
+The owner and the developer can give roles to themselves and each other. They hold everything anyway, so it grants nothing: it makes them part of what a role is used for, such as who gets an alert.
+
 The handlers enforce these rules themselves; callback data is never trusted.
 
 ## Install

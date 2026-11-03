@@ -7,6 +7,13 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+### Changed
+
+- The owner and the developer can give roles to themselves and each other. They
+  hold everything anyway, so it grants nothing, but it lets them be part of what
+  a role is used for, such as who gets a purchase alert. Delegates still cannot
+  touch their roles, and nobody else can change their own.
+
 ## [0.1.0-beta.4] - 2026-11-03
 
 ### Added
