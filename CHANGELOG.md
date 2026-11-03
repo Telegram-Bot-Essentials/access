@@ -7,6 +7,8 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+## [0.1.0-beta.6] - 2026-11-03
+
 ### Added
 
 - Roles are offered as essence's `RecipientGroups`, so other packages can address
