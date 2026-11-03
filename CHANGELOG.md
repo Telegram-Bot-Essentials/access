@@ -7,6 +7,8 @@ bump may carry breaking changes until the API stabilizes at 1.0.
 
 ## [Unreleased]
 
+## [0.1.0-beta.5] - 2026-11-03
+
 ### Changed
 
 - The owner and the developer can give roles to themselves and each other. They
